@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import tensornetwork as tn
-import albumentations as A
+from albumentations.augmentations.crops.transforms import CenterCrop
 import logging
 
 def create_node(matrix, tensor_base):
@@ -18,10 +18,15 @@ def create_node(matrix, tensor_base):
 
   return tn.Node(np.reshape(matrix, tuple([tensor_base] * int(N)))), int(N) 
 
+def crop_pgm_image(im_pgm, width=512, height=512):
+  resizer = CenterCrop(width=width, height=height)
+  im_pgm = resizer(image=im_pgm)["image"]
+  
+  return im_pgm 
+
 def create_node_from_pgm(im_pgm, tensor_base, width=512, height=512):
   
   if im_pgm.shape[1] != width or im_pgm.shape[0] != height: 
-    resizer = A.Resize(width=width, height=height)
-    im_pgm = resizer(image=im_pgm)["image"]
+    im_pgm = crop_pgm_image(im_pgm, width=width, height=height)
   
   return create_node(im_pgm, tensor_base)

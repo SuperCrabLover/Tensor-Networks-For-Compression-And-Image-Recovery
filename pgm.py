@@ -114,4 +114,3 @@ def create_node_from_pgm(im_pgm, tensor_base, width=512, height=512, transpose_m
     im_pgm = crop_pgm_image(im_pgm, width=width, height=height)
   
   return create_node(im_pgm, tensor_base, transpose_modes)
-

@@ -18,10 +18,18 @@ def create_tensor(matrix, tensor_base, transpose_modes=False):
   pix_am = matrix.shape[0] * matrix.shape[1]
   N = math.log(pix_am, tensor_base)
   if not N.is_integer():
-    raise Exception(f"create_node error: the tensor rank {N} is not an integer")
+    raise Exception(f"create_tensor error: the tensor rank {N} is not an integer")
   
   N = int(N)
-  return np.reshape(matrix, tuple([tensor_base] * N), order='f'), N
+  tensor = np.reshape(matrix, tuple([tensor_base] * N), order='f')
+  
+  if transpose_modes is True and N % 2 != 0:
+    raise Exception(f"create_tensor error: transpose_modes is {transpose_modes} N % 2 = {N % 2}")
+  elif transpose_modes is True:
+    # exmp: np.arange(N) -> [0, 1, 2, 3, 4, 5] -> [[0,1,2], [3, 4, 5]] -> [[0, 3], [1, 4], [5, 6]] -> [0, 3, 1, 4, 5, 6]
+    indices = np.arange(N).reshape(2, N // 2).transpose().reshape(-1)
+    tensor = tensor.transpose(indices)
+  return tensor, N
 
 def create_image_from_tensor(tensor, transpose_modes=False):
   '''
@@ -33,14 +41,25 @@ def create_image_from_tensor(tensor, transpose_modes=False):
   '''
   
   tensor_base = tensor.shape[0]
-  pixel_am = tensor_base ** len(tensor.shape)
+  N = len(tensor.shape)
+  pixel_am = tensor_base ** N
   
   mode = np.sqrt(pixel_am)
   if not mode.is_integer():
     raise Exception(f"create_image_from_tensor: the image width {mode} is not an integer")
+
+  
+  if transpose_modes is True and N % 2 != 0:
+    raise Exception(f"create_image_from_tensor error: transpose_modes is {transpose_modes} N % 2 = {N % 2}")
+  elif transpose_modes is True:
+    # exmp: np.arange(N) -> [0, 3, 1, 4, 5, 6] -> [[0, 3], [1, 4], [5, 6]] -> [[0,1,2], [3, 4, 5]] -> [0, 1, 2, 3, 4, 5]
+    indices = np.arange(N).reshape(N // 2, 2).transpose().reshape(-1)
+    tensor = tensor.transpose(indices)
   
   mode = int(mode)
-  return tensor.reshape(mode, mode, order='f') 
+  matrix = tensor.reshape(mode, mode, order='f') 
+  
+  return matrix
 
 def create_node(matrix, tensor_base, transpose_modes=False):
   '''
